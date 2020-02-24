@@ -1,10 +1,14 @@
 from PIL import *
 from PIL import Image, ImageDraw
 import numpy as np
+import math
+import cv2
+
+samples = np.loadtxt("samples.txt")
+#print(samples)
 
 def main():
-
-    img = Image.open('numbers2.PNG')
+    img = Image.open("deneme.PNG")
     #img.show()
     img_gray = img.convert('L')  # converts the image to grayscale image
     ONE = 150
@@ -19,8 +23,36 @@ def main():
     #new_img2.show()
 
     new_img3 = draw_rectangles(table, img)
+    #new_img3.show()
+
+    cropped_images = []
+    for i in range(len(table)):
+        cropped = img.crop((table[i][2], table[i][1], table[i][4], table[i][3]))
+        cropped = cropped.resize((21, 21))
+        cropped_images.append(cropped)
+        #cropped.show()
+
+    label_hu_nums = hu_moments(cropped_images)
+
+    # dsize = (21, 21)
+    # image = cv2.imread('1.jpg')
+    # image = cv2.resize(image, dsize)
+    # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # print(cv2.moments(image))
+    # print(cv2.HuMoments(cv2.moments(image)))
+
+
+
+    picture_to_number(samples, label_hu_nums, table, new_img3)
+
     new_img3.show()
 
+    # for i in range(len(label_hu_nums)):
+    #     label_hu_nums[i][0] = i % 10
+    # print(label_hu_nums)
+    # data = np.asarray(label_hu_nums)
+    # np.savetxt("samplestimes.txt", data)
+    #print(np.load("samples.txt"))
 
 def binary_image(nrow,ncol,Value):
     x, y = np.indices((nrow, ncol))
@@ -182,6 +214,23 @@ def blob_coloring_8_connected(bim, ONE):
                     if int(table[ind][4]) < j or int(table[ind][4]) == 0:
                         table[ind][4] = j
 
+
+    ## Table format is = "label-min_i-min_j-max_i-max_j" ##
+
+    #new_array = []
+    #elements = []
+    #elements.append([])
+    #elements.append([])
+
+    #for a in range(len(list)):
+    #    new_array.append(elements)
+    #    elements = []
+    #    elements.append([])
+    #    elements.append([])
+    #    for i in range(table[a][1], table[a][3]):
+    #        for j in range(table[a][2], table[a][4]):
+    #print(new_array)
+
     return im, color_im, table
 
 
@@ -211,8 +260,124 @@ def update_array(a, label1, label2):
 def draw_rectangles (array, image):
     draw = ImageDraw.Draw(image)
     for a in range(len(array)):
-        draw.rectangle([int(array[a][2])-2, int(array[a][1])-2, int(array[a][4])+2, int(array[a][3])+2], width=2, outline="#ff0000")
+        draw.rectangle([int(array[a][2])-2, int(array[a][1])-2, int(array[a][4])+2, int(array[a][3])+2], width=1, outline="#ff0000")
     return image
+
+def hu_moments (img_array):
+    label_hu_numbers = np.zeros((len(img_array), 8)) #number-Hu1-.....-Hu7
+
+    for num in range(len(img_array)):
+        img_gray = img_array[num].convert('L')  # converts the image to grayscale image
+        ONE = 1
+        a = np.asarray(img_gray)  # from PIL to np array
+        a_bin = threshold(a, 100, ONE, 0)
+        im = Image.fromarray(a_bin)
+        nrow = a_bin.shape[0]
+        ncol = a_bin.shape[1]
+        #print(a_bin)
+        #print("-----------------")
+
+        m_00, m_10, m_01 = 0, 0, 0
+
+        for i in range(nrow):
+            for j in range(ncol):
+                m_00 = m_00 + a_bin[i][j]
+                #print(m_00)
+                m_10 = m_10 + i*(a_bin[i][j])
+                m_01 = m_01 + j*(a_bin[i][j])
+            #print(m_00)
+
+        x_0 = m_10 / m_00
+        y_0 = m_01 / m_00
+
+        mu_00, mu_01, mu_10, mu_11, mu_02, mu_20, mu_12, mu_21, mu_03, mu_30 = 0,0,0,0,0,0,0,0,0,0
+
+        for i in range(nrow):
+            for j in range(ncol):
+                mu_00 = mu_00 + a_bin[i][j]
+                mu_01 = mu_01 + (j - y_0) * a_bin[i][j]
+                mu_10 = mu_10 + (i - x_0) * a_bin[i][j]
+                mu_11 = mu_11 + (j - y_0) * (i - x_0) * a_bin[i][j]
+                mu_02 = mu_02 + ((j - y_0) ** 2) * a_bin[i][j]
+                mu_20 = mu_20 + ((i - x_0) ** 2) * a_bin[i][j]
+                mu_12 = mu_12 + (i - x_0) * ((j - y_0) ** 2) * a_bin[i][j]
+                mu_21 = mu_21 + (j - y_0) * ((i - x_0) ** 2) * a_bin[i][j]
+                mu_03 = mu_03 + ((j - y_0) ** 3) * a_bin[i][j]
+                mu_30 = mu_30 + ((i - x_0) ** 3) * a_bin[i][j]
+            #print(mu_00)
+        n_00, n_01, n_10, n_11, n_02, n_20, n_12, n_21, n_03, n_30, yu = 0,0,0,0,0,0,0,0,0,0,0
+
+        yu = 1
+        n_00 = mu_00/(mu_00)**yu
+        yu = 3/2.0
+        n_01 = mu_01/(mu_00)**yu
+        n_10 = mu_10/(mu_00)**yu
+        yu = 2
+        n_11 = mu_11/(mu_00)**yu
+        n_02 = mu_02/(mu_00)**yu
+        n_20 = mu_20/(mu_00)**yu
+        yu = 5/2.0
+        n_12 = mu_12/(mu_00)**yu
+        n_21 = mu_21/(mu_00)**yu
+        n_03 = mu_03/(mu_00)**yu
+        n_30 = mu_30/(mu_00)**yu
+
+        H1, H2, H3, H4, H5, H6, H7 = 0,0,0,0,0,0,0
+
+        H1 = (n_20 + n_02)
+        H2 = ((n_20 - n_02)**2 + 4 * (n_11)**2)
+        H3 = ((n_30 - 3*n_12)**2 + (3*n_21 - n_03)**2)
+        H4 = ((n_30 + n_12)**2 + (n_21 + n_03)**2)
+        H5 = ((n_30 - 3*n_12)*(n_30 + n_12)*((n_30 + n_12)**2 - 3*(n_21 + n_03)**2) + (3*n_21 - n_03)*(n_21 + n_03)*(3*(n_30 + n_12)**2 - (n_21 + n_03)**2))
+        H6 = ((n_20 - n_02)*((n_30 + n_12)**2 - (n_21 + n_03)**2) + 4*n_11*(n_30 + n_12)*(n_21 + n_03))
+        H7 = ((3*n_21 - n_03)*(n_30 + n_12)*((n_30 + n_12)**2 - 3*(n_21 + n_03)**2) + (3*n_12 - n_30)*(n_21 + n_03)*(3*(n_30 + n_12)**2 - (n_21 + n_03)**2))
+
+        # label_hu_numbers[num][1] = -1 * math.copysign(1.0, H1) * math.log10(abs(H1))
+        # label_hu_numbers[num][2] = -1 * math.copysign(1.0, H2) * math.log10(abs(H2))
+        # label_hu_numbers[num][3] = -1 * math.copysign(1.0, H3) * math.log10(abs(H3))
+        # label_hu_numbers[num][4] = -1 * math.copysign(1.0, H4) * math.log10(abs(H4))
+        # label_hu_numbers[num][5] = -1 * math.copysign(1.0, H5) * math.log10(abs(H5))
+        # label_hu_numbers[num][6] = -1 * math.copysign(1.0, H6) * math.log10(abs(H6))
+        # label_hu_numbers[num][7] = -1 * math.copysign(1.0, H7) * math.log10(abs(H7))
+
+
+        label_hu_numbers[num][1] = H1
+        label_hu_numbers[num][2] = H2
+        label_hu_numbers[num][3] = H3
+        label_hu_numbers[num][4] = H4
+        label_hu_numbers[num][5] = H5
+        label_hu_numbers[num][6] = H6
+        label_hu_numbers[num][7] = H7
+
+    return label_hu_numbers
+
+def picture_to_number (sample_array, current_hu, pixels, img):
+    #print("cur_hu =", len(current_hu))
+    #print("sample_hu =", len(sample_array))
+    #print(sample_array)
+
+    draw = ImageDraw.Draw(img)
+
+    for cur in range(len(current_hu)):
+        current_number = 9999999999999
+        for i in range(len(sample_array)):
+            a = math.sqrt((current_hu[cur][1] - sample_array[i][1])**2+(current_hu[cur][2] - sample_array[i][2])**2 +
+                          (current_hu[cur][3] - sample_array[i][3])**2+(current_hu[cur][4] - sample_array[i][4])**2 +
+                          (current_hu[cur][5] - sample_array[i][5])**2+(current_hu[cur][6] - sample_array[i][6])**2 +
+                          (current_hu[cur][7] - sample_array[i][7])**2)
+            if current_number >= a:
+                current_number = a
+                current_hu[cur][0] = sample_array[i][0]
+            else:
+                pass
+
+    # for loop in range(len(current_hu)):
+    #     print(int(current_hu[loop][0]))
+
+    for loop in range(len(pixels)):
+        draw.text((pixels[loop][2] + 15, pixels[loop][1] - 15), str(int(current_hu[loop][0])), fill="black", font=None, anchor=None)
+
+    return
 
 if __name__=='__main__':
     main()
