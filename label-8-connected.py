@@ -5,10 +5,10 @@ import math
 import cv2
 
 samples = np.loadtxt("samples.txt")
-#print(samples)
+samplesR = np.loadtxt("samplesR.txt")
 
 def main():
-    img = Image.open("deneme.PNG")
+    img = Image.open("ortalamazorluk.png")
     #img.show()
     img_gray = img.convert('L')  # converts the image to grayscale image
     ONE = 150
@@ -33,25 +33,43 @@ def main():
         #cropped.show()
 
     label_hu_nums = hu_moments(cropped_images)
+    label_R_nums = r_moment(cropped_images)
 
     # dsize = (21, 21)
-    # image = cv2.imread('1.jpg')
+    # image = cv2.imread('1.png')
     # image = cv2.resize(image, dsize)
     # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # print(cv2.moments(image))
     # print(cv2.HuMoments(cv2.moments(image)))
 
-
-
-    picture_to_number(samples, label_hu_nums, table, new_img3)
-
+    picture_to_number_hu(samples, label_hu_nums, table, new_img3)
     new_img3.show()
 
+    # picture_to_number_R(samplesR, label_R_nums, table, new_img3)
+    # new_img3.show()
+
+#label_hu doldurma kısmı
     # for i in range(len(label_hu_nums)):
     #     label_hu_nums[i][0] = i % 10
     # print(label_hu_nums)
     # data = np.asarray(label_hu_nums)
-    # np.savetxt("samplestimes.txt", data)
+    # with open("samples.txt", "ab") as f:
+    #     np.savetxt(f, data)
+
+
+    # np.savetxt("samples6343.txt", data)
+    #print(np.load("samples.txt"))
+
+#label_R doldurma kısmı
+    # for i in range(len(label_R_nums)):
+    #     label_R_nums[i][0] = i % 10
+    # print(label_R_nums)
+    # data = np.asarray(label_R_nums)
+    # with open("samplesR.txt", "ab") as f:
+    #     np.savetxt(f, data)
+
+
+    # np.savetxt("samplesR213214.txt", data)
     #print(np.load("samples.txt"))
 
 def binary_image(nrow,ncol,Value):
@@ -272,65 +290,66 @@ def hu_moments (img_array):
         a = np.asarray(img_gray)  # from PIL to np array
         a_bin = threshold(a, 100, ONE, 0)
         im = Image.fromarray(a_bin)
+        # a_bin = np.asarray(im)
         nrow = a_bin.shape[0]
         ncol = a_bin.shape[1]
         #print(a_bin)
         #print("-----------------")
 
-        m_00, m_10, m_01 = 0, 0, 0
-
-        for i in range(nrow):
-            for j in range(ncol):
-                m_00 = m_00 + a_bin[i][j]
-                #print(m_00)
-                m_10 = m_10 + i*(a_bin[i][j])
-                m_01 = m_01 + j*(a_bin[i][j])
-            #print(m_00)
-
-        x_0 = m_10 / m_00
-        y_0 = m_01 / m_00
-
-        mu_00, mu_01, mu_10, mu_11, mu_02, mu_20, mu_12, mu_21, mu_03, mu_30 = 0,0,0,0,0,0,0,0,0,0
-
-        for i in range(nrow):
-            for j in range(ncol):
-                mu_00 = mu_00 + a_bin[i][j]
-                mu_01 = mu_01 + (j - y_0) * a_bin[i][j]
-                mu_10 = mu_10 + (i - x_0) * a_bin[i][j]
-                mu_11 = mu_11 + (j - y_0) * (i - x_0) * a_bin[i][j]
-                mu_02 = mu_02 + ((j - y_0) ** 2) * a_bin[i][j]
-                mu_20 = mu_20 + ((i - x_0) ** 2) * a_bin[i][j]
-                mu_12 = mu_12 + (i - x_0) * ((j - y_0) ** 2) * a_bin[i][j]
-                mu_21 = mu_21 + (j - y_0) * ((i - x_0) ** 2) * a_bin[i][j]
-                mu_03 = mu_03 + ((j - y_0) ** 3) * a_bin[i][j]
-                mu_30 = mu_30 + ((i - x_0) ** 3) * a_bin[i][j]
-            #print(mu_00)
-        n_00, n_01, n_10, n_11, n_02, n_20, n_12, n_21, n_03, n_30, yu = 0,0,0,0,0,0,0,0,0,0,0
-
-        yu = 1
-        n_00 = mu_00/(mu_00)**yu
-        yu = 3/2.0
-        n_01 = mu_01/(mu_00)**yu
-        n_10 = mu_10/(mu_00)**yu
-        yu = 2
-        n_11 = mu_11/(mu_00)**yu
-        n_02 = mu_02/(mu_00)**yu
-        n_20 = mu_20/(mu_00)**yu
-        yu = 5/2.0
-        n_12 = mu_12/(mu_00)**yu
-        n_21 = mu_21/(mu_00)**yu
-        n_03 = mu_03/(mu_00)**yu
-        n_30 = mu_30/(mu_00)**yu
-
-        H1, H2, H3, H4, H5, H6, H7 = 0,0,0,0,0,0,0
-
-        H1 = (n_20 + n_02)
-        H2 = ((n_20 - n_02)**2 + 4 * (n_11)**2)
-        H3 = ((n_30 - 3*n_12)**2 + (3*n_21 - n_03)**2)
-        H4 = ((n_30 + n_12)**2 + (n_21 + n_03)**2)
-        H5 = ((n_30 - 3*n_12)*(n_30 + n_12)*((n_30 + n_12)**2 - 3*(n_21 + n_03)**2) + (3*n_21 - n_03)*(n_21 + n_03)*(3*(n_30 + n_12)**2 - (n_21 + n_03)**2))
-        H6 = ((n_20 - n_02)*((n_30 + n_12)**2 - (n_21 + n_03)**2) + 4*n_11*(n_30 + n_12)*(n_21 + n_03))
-        H7 = ((3*n_21 - n_03)*(n_30 + n_12)*((n_30 + n_12)**2 - 3*(n_21 + n_03)**2) + (3*n_12 - n_30)*(n_21 + n_03)*(3*(n_30 + n_12)**2 - (n_21 + n_03)**2))
+        # m_00, m_10, m_01 = 0, 0, 0
+        #
+        # for i in range(nrow):
+        #     for j in range(ncol):
+        #         m_00 = m_00 + a_bin[i][j]
+        #         #print(m_00)
+        #         m_10 = m_10 + i*(a_bin[i][j])
+        #         m_01 = m_01 + j*(a_bin[i][j])
+        #     #print(m_00)
+        #
+        # x_0 = m_10 / m_00
+        # y_0 = m_01 / m_00
+        #
+        # mu_00, mu_01, mu_10, mu_11, mu_02, mu_20, mu_12, mu_21, mu_03, mu_30 = 0,0,0,0,0,0,0,0,0,0
+        #
+        # for i in range(nrow):
+        #     for j in range(ncol):
+        #         mu_00 = mu_00 + a_bin[i][j]
+        #         mu_01 = mu_01 + (j - y_0) * a_bin[i][j]
+        #         mu_10 = mu_10 + (i - x_0) * a_bin[i][j]
+        #         mu_11 = mu_11 + (j - y_0) * (i - x_0) * a_bin[i][j]
+        #         mu_02 = mu_02 + ((j - y_0) ** 2) * a_bin[i][j]
+        #         mu_20 = mu_20 + ((i - x_0) ** 2) * a_bin[i][j]
+        #         mu_12 = mu_12 + (i - x_0) * ((j - y_0) ** 2) * a_bin[i][j]
+        #         mu_21 = mu_21 + (j - y_0) * ((i - x_0) ** 2) * a_bin[i][j]
+        #         mu_03 = mu_03 + ((j - y_0) ** 3) * a_bin[i][j]
+        #         mu_30 = mu_30 + ((i - x_0) ** 3) * a_bin[i][j]
+        #     #print(mu_00)
+        # n_00, n_01, n_10, n_11, n_02, n_20, n_12, n_21, n_03, n_30, yu = 0,0,0,0,0,0,0,0,0,0,0
+        #
+        # yu = 1
+        # n_00 = mu_00/(mu_00)**yu
+        # yu = 3/2.0
+        # n_01 = mu_01/(mu_00)**yu
+        # n_10 = mu_10/(mu_00)**yu
+        # yu = 2
+        # n_11 = mu_11/(mu_00)**yu
+        # n_02 = mu_02/(mu_00)**yu
+        # n_20 = mu_20/(mu_00)**yu
+        # yu = 5/2.0
+        # n_12 = mu_12/(mu_00)**yu
+        # n_21 = mu_21/(mu_00)**yu
+        # n_03 = mu_03/(mu_00)**yu
+        # n_30 = mu_30/(mu_00)**yu
+        #
+        # H1, H2, H3, H4, H5, H6, H7 = 0,0,0,0,0,0,0
+        #
+        # H1 = (n_20 + n_02)
+        # H2 = ((n_20 - n_02)**2 + 4 * (n_11)**2)
+        # H3 = ((n_30 - 3*n_12)**2 + (3*n_21 - n_03)**2)
+        # H4 = ((n_30 + n_12)**2 + (n_21 + n_03)**2)
+        # H5 = ((n_30 - 3*n_12)*(n_30 + n_12)*((n_30 + n_12)**2 - 3*(n_21 + n_03)**2) + (3*n_21 - n_03)*(n_21 + n_03)*(3*(n_30 + n_12)**2 - (n_21 + n_03)**2))
+        # H6 = ((n_20 - n_02)*((n_30 + n_12)**2 - (n_21 + n_03)**2) + 4*n_11*(n_30 + n_12)*(n_21 + n_03))
+        # H7 = ((3*n_21 - n_03)*(n_30 + n_12)*((n_30 + n_12)**2 - 3*(n_21 + n_03)**2) + (3*n_12 - n_30)*(n_21 + n_03)*(3*(n_30 + n_12)**2 - (n_21 + n_03)**2))
 
         # label_hu_numbers[num][1] = -1 * math.copysign(1.0, H1) * math.log10(abs(H1))
         # label_hu_numbers[num][2] = -1 * math.copysign(1.0, H2) * math.log10(abs(H2))
@@ -340,6 +359,75 @@ def hu_moments (img_array):
         # label_hu_numbers[num][6] = -1 * math.copysign(1.0, H6) * math.log10(abs(H6))
         # label_hu_numbers[num][7] = -1 * math.copysign(1.0, H7) * math.log10(abs(H7))
 
+        # label_hu_numbers[num][1] = H1
+        # label_hu_numbers[num][2] = H2
+        # label_hu_numbers[num][3] = H3
+        # label_hu_numbers[num][4] = H4
+        # label_hu_numbers[num][5] = H5
+        # label_hu_numbers[num][6] = H6
+        # label_hu_numbers[num][7] = H7
+
+
+        m = [[0,0],[0,0]]
+        for i in range(2) :
+            for j in range(2) :
+                for row in range(nrow) :
+                    for col in range(ncol) :
+                        m[i][j] = m[i][j] + (pow(row,i) * pow(col,j) * a_bin[row][col])
+
+        x_0 = m[1][0] / m[0][0]
+        y_0 = m[0][1] / m[0][0]
+
+        # print(m[0][0])
+        # print(m[0][1])
+        # print(m[1][0])
+
+        # print(x_0)
+        # print(y_0)
+
+        mu = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+        for i in range(4):
+            for j in range(4):
+                for row in range(nrow):
+                    for col in range(ncol):
+                        mu[i][j] = mu[i][j] + (pow((row - x_0), i) * pow((col - y_0), j) * a_bin[row][col])
+
+        # print("m00===",mu[0][0])
+        # print("m01===",mu[0][1])
+        # print("m02===",mu[0][2])
+        # print("m03===",mu[0][3])
+
+        n = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+        for i in range(4):
+            for j in range(4):
+                for row in range(nrow):
+                    for col in range(ncol):
+                        n[i][j] = (mu[i][j] / pow(mu[0][0], ((i+j)/2)+1))
+
+        # print(n[0][0])
+        # print(n[0][1])
+        # print(n[0][2])
+        # print(n[0][3])
+
+        H1 = n[2][0] + n[0][2]
+        H2 = pow((n[2][0] - n[0][2]), 2) + 4 * pow((n[1][1]), 2)
+        H3 = pow((n[3][0] - 3 * n[1][2]), 2) + pow((3 * n[2][1] - n[0][3]), 2)
+        H4 = pow((n[3][0] + n[1][2]), 2) + pow((n[2][1] + n[0][3]), 2)
+        H5 = (n[3][0] - 3 * n[1][2]) * (n[3][0] + n[1][2]) * (pow((n[3][0] + n[1][2]), 2) - 3 * pow((n[2][1] + n[0][3]), 2)) + \
+        (3 * n[2][1] - n[0][3]) * (n[2][1] + n[0][3]) * (3 * pow((n[3][0] + n[1][2]), 2) - pow((n[2][1] + n[0][3]), 2))
+        H6 = (n[2][0] - n[0][2]) * (pow((n[3][0] + n[1][2]), 2) - pow((n[2][1] + n[0][3]), 2)) + \
+            4 * n[1][1] * (n[3][0] + n[1][2]) * (n[2][1] + n[0][3])
+        H7 = -(((3 * n[2][1]) - n[0][3]) * (n[3][0] + n[1][2]) * (pow((n[3][0] + n[1][2]), 2) - (3 * pow(n[2][1] + n[0][3], 2))) - \
+         (n[3][0] - (3 * n[1][2])) * (n[2][1] + n[0][3]) * ((3 * pow((n[3][0] + n[1][2]), 2)) - (pow((n[2][1] + n[0][3]), 2))))
+
+
+        # print(H1)
+        # print(H2)
+        # print(H3)
+        # print(H4)
+        # print(H5)
+        # print(H6)
+        # print(H7)
 
         label_hu_numbers[num][1] = H1
         label_hu_numbers[num][2] = H2
@@ -349,9 +437,15 @@ def hu_moments (img_array):
         label_hu_numbers[num][6] = H6
         label_hu_numbers[num][7] = H7
 
+
+        # moments = cv2.moments(a_bin)
+        # huMoments = cv2.HuMoments(moments)
+        # print("CV-MOMENTS (DOWN)")
+        # print(huMoments)
+
     return label_hu_numbers
 
-def picture_to_number (sample_array, current_hu, pixels, img):
+def picture_to_number_hu(sample_array, current_hu, pixels, img):
     #print("cur_hu =", len(current_hu))
     #print("sample_hu =", len(sample_array))
     #print(sample_array)
@@ -375,7 +469,56 @@ def picture_to_number (sample_array, current_hu, pixels, img):
     #     print(int(current_hu[loop][0]))
 
     for loop in range(len(pixels)):
-        draw.text((pixels[loop][2] + 15, pixels[loop][1] - 15), str(int(current_hu[loop][0])), fill="black", font=None, anchor=None)
+        draw.text((((pixels[loop][2] + pixels[loop][4]) / 2), pixels[loop][1] - 12), str(int(current_hu[loop][0])), fill="black", font=None, anchor=None)
+
+    return
+
+
+def r_moment(image_array):
+
+    label_R_numbers = np.zeros((len(image_array), 11))  # number-R1-.....-R10
+    label_hu_numbers = hu_moments(image_array)
+
+    for i in range(len(label_hu_numbers)):
+        label_R_numbers[i][0] = label_hu_numbers[i][0]
+
+    for i in range(len(label_hu_numbers)):
+        label_R_numbers[i][1] = math.sqrt(label_hu_numbers[i][2]) / label_hu_numbers[i][1]
+        label_R_numbers[i][2] = (label_hu_numbers[i][1] + math.sqrt(label_hu_numbers[i][2])) / (label_hu_numbers[i][1] - math.sqrt(label_hu_numbers[i][2]))
+        label_R_numbers[i][3] = math.sqrt(label_hu_numbers[i][3]) / math.sqrt(label_hu_numbers[i][4])
+        label_R_numbers[i][4] = math.sqrt(label_hu_numbers[i][3]) / math.sqrt(abs(label_hu_numbers[i][5]))
+        label_R_numbers[i][5] = math.sqrt(label_hu_numbers[i][4]) / math.sqrt(abs(label_hu_numbers[i][5]))
+        label_R_numbers[i][6] = abs(label_hu_numbers[i][6]) / label_hu_numbers[i][1] * label_hu_numbers[i][3]
+        label_R_numbers[i][7] = abs(label_hu_numbers[i][6]) / label_hu_numbers[i][1] * math.sqrt(abs(label_hu_numbers[i][5]))
+        label_R_numbers[i][8] = abs(label_hu_numbers[i][6]) / label_hu_numbers[i][3] * math.sqrt(label_hu_numbers[i][2])
+        label_R_numbers[i][9] = abs(label_hu_numbers[i][6]) / math.sqrt(abs(label_hu_numbers[i][5])) * math.sqrt(label_hu_numbers[i][2])
+        label_R_numbers[i][10] = abs(label_hu_numbers[i][5]) / label_hu_numbers[i][3] * label_hu_numbers[i][4]
+
+    return label_R_numbers
+
+def picture_to_number_R (sample_array, current_hu, pixels, img):
+
+    draw = ImageDraw.Draw(img)
+
+    for cur in range(len(current_hu)):
+        current_number = 9999999999999
+        for i in range(len(sample_array)):
+            a = math.sqrt((current_hu[cur][1] - sample_array[i][1])**2 + (current_hu[cur][2] - sample_array[i][2])**2 +
+                          (current_hu[cur][3] - sample_array[i][3])**2 + (current_hu[cur][4] - sample_array[i][4])**2 +
+                          (current_hu[cur][5] - sample_array[i][5])**2 + (current_hu[cur][6] - sample_array[i][6])**2 +
+                          (current_hu[cur][7] - sample_array[i][7])**2 + (current_hu[cur][8] - sample_array[i][8])**2 +
+                          (current_hu[cur][9] - sample_array[i][9])**2 + (current_hu[cur][10] - sample_array[i][10])**2)
+            if current_number >= a:
+                current_number = a
+                current_hu[cur][0] = sample_array[i][0]
+            else:
+                pass
+
+    # for loop in range(len(current_hu)):
+    #     print(int(current_hu[loop][0]))
+
+    for loop in range(len(pixels)):
+        draw.text((((pixels[loop][2] + pixels[loop][4]) / 2), pixels[loop][1] - 12), str(int(current_hu[loop][0])), fill="black", font=None, anchor=None)
 
     return
 
