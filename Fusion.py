@@ -2,8 +2,6 @@ from PIL import *
 from PIL import Image, ImageDraw
 import numpy as np
 import math
-import cv2
-import mahotas
 import tkinter as tk
 from tkinter import messagebox
 from PIL import ImageTk, Image
