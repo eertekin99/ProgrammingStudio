@@ -11,95 +11,44 @@ from tkinter import Entry
 
 samples = np.loadtxt("samples.txt")
 samplesR = np.loadtxt("samplesR.txt")
-
-
-top = tk.Tk()  # creates window
-top.filename =filedialog.askopenfilename(initialdir = "/",title = "Select file",
-                                              filetypes = (("all files","*.*"),("jpeg files","*.jpg")))
+samplesZ = np.loadtxt("samplesZ.txt")
 
 
 def main():
-
-
-    img1 = ImageTk.PhotoImage(Image.open(top.filename))  # image
+    global top
+    top = tk.Tk() # creates window
+    global top_filename
+    top_filename = filedialog.askopenfilename(initialdir="/", title="Select file",
+                                              filetypes=(("all files", "*.*"), ("jpeg files", "*.jpg")))
+    img1 = ImageTk.PhotoImage(Image.open(top_filename))  # image
     panel = tk.Label(top, image=img1)
     panel.pack(side="bottom", fill="both", expand="yes")
     B = tk.Button(top, text="Testing!", padx = 40, pady = 20, borderwidth=2, command=TestingEvent)  # button
     B.pack()
     B1 = tk.Button(top, text="Training!", padx = 40, pady = 20, borderwidth=2, command=TrainingEvent)  # button
     B1.pack()
-
+    B2 = tk.Button(top, text="Change File!", padx = 40, pady = 20, borderwidth=2, command= lambda: FileEvent(img1, top))  # button
+    B2.pack()
     top.mainloop()
 
-    # img = Image.open(top.filename)
-    # #img.show()
-    # img_gray = img.convert('L')  # converts the image to grayscale image
-    # ONE = 150
-    # a = np.asarray(img_gray)  # from PIL to np array
-    # a_bin = threshold(a, 100, ONE, 0)
-    # # im = Image.fromarray(a_bin)  # from np array to PIL format
-    # #im.show()
-    #
-    # im_label, colour_label, table = blob_coloring_8_connected(a_bin, ONE)
-    #
-    # #new_img2 = np2PIL_color(colour_label)
-    # #new_img2.show()
-    #
-    # new_img3 = draw_rectangles(table, img)
-    # #new_img3.show()
-    #
-    # new_img4 = new_img3
-    #
-    # cropped_images = []
-    # for i in range(len(table)):
-    #     cropped = img.crop((table[i][2], table[i][1], table[i][4], table[i][3]))
-    #     cropped = cropped.resize((21, 21))
-    #     cropped_images.append(cropped)
-    #     #cropped.show()
-    #
-    # label_hu_nums = hu_moments(cropped_images)
-    # label_R_nums = r_moment(cropped_images)
-
-    # picture_to_number_hu(samples, label_hu_nums, table, new_img3)
-    # new_img3.show()
-
-    # picture_to_number_R(samplesR, label_R_nums, table, new_img4)
-    # new_img4.show()
-
-
-
-
-#label_hu doldurma kısmı
-    # for i in range(len(label_hu_nums)):
-    #     #label_hu_nums[i][0] = i % 10
-    #     label_hu_nums[i][0] = 9
-    # print(label_hu_nums)
-    # data = np.asarray(label_hu_nums)
-    # with open("samples.txt", "ab") as f:
-    #     np.savetxt(f, data)
-
-#creating txt for database
-    # np.savetxt("samples6343.txt", data)
-    #print(np.load("samples.txt"))
-
-
-
-#label_R doldurma kısmı
-    # for i in range(len(label_R_nums)):
-    #     #label_R_nums[i][0] = i % 10
-    #     label_R_nums[i][0] = 9
-    # print(label_R_nums)
-    # data = np.asarray(label_R_nums)
-    # with open("samplesR.txt", "ab") as f:
-    #     np.savetxt(f, data)
-
-#creating txt for database
-    # np.savetxt("samplesR213214.txt", data)
-    #print(np.load("samples.txt"))
-
-
-
-
+def FileEvent(img1, top):
+    top.destroy()
+    top = tk.Tk()
+    global top_filename
+    top_filename = filedialog.askopenfilename(initialdir="/", title="Select file",
+                                              filetypes=(("all files", "*.*"), ("jpeg files", "*.jpg")))
+    img1 = ImageTk.PhotoImage(Image.open(top_filename))  # image
+    panel = tk.Label(top, image=img1)
+    panel.pack(side="bottom", fill="both", expand="yes")
+    B = tk.Button(top, text="Testing!", padx=40, pady=20, borderwidth=2, command=TestingEvent)  # button
+    B.pack()
+    B1 = tk.Button(top, text="Training!", padx=40, pady=20, borderwidth=2, command=TrainingEvent)  # button
+    B1.pack()
+    B2 = tk.Button(top, text="Change File!", padx=40, pady=20, borderwidth=2,
+                   command=lambda: FileEvent(img1, top))  # button
+    B2.pack()
+    top.mainloop()
+    return
 
 
 def binary_image(nrow,ncol,Value):
@@ -410,21 +359,21 @@ def r_moment(image_array):
 
     return label_R_numbers
 
-def picture_to_number_R (sample_array, current_hu, pixels, img):
+def picture_to_number_R (sample_array, current_R, pixels, img):
 
     draw = ImageDraw.Draw(img)
 
-    for cur in range(len(current_hu)):
+    for cur in range(len(current_R)):
         current_number = 9999999999999
         for i in range(len(sample_array)):
-            a = math.sqrt((current_hu[cur][1] - sample_array[i][1])**2 + (current_hu[cur][2] - sample_array[i][2])**2 +
-                          (current_hu[cur][3] - sample_array[i][3])**2 + (current_hu[cur][4] - sample_array[i][4])**2 +
-                          (current_hu[cur][5] - sample_array[i][5])**2 + (current_hu[cur][6] - sample_array[i][6])**2 +
-                          (current_hu[cur][7] - sample_array[i][7])**2 + (current_hu[cur][8] - sample_array[i][8])**2 +
-                          (current_hu[cur][9] - sample_array[i][9])**2 + (current_hu[cur][10] - sample_array[i][10])**2)
+            a = math.sqrt((current_R[cur][1] - sample_array[i][1])**2 + (current_R[cur][2] - sample_array[i][2])**2 +
+                          (current_R[cur][3] - sample_array[i][3])**2 + (current_R[cur][4] - sample_array[i][4])**2 +
+                          (current_R[cur][5] - sample_array[i][5])**2 + (current_R[cur][6] - sample_array[i][6])**2 +
+                          (current_R[cur][7] - sample_array[i][7])**2 + (current_R[cur][8] - sample_array[i][8])**2 +
+                          (current_R[cur][9] - sample_array[i][9])**2 + (current_R[cur][10] - sample_array[i][10])**2)
             if current_number >= a:
                 current_number = a
-                current_hu[cur][0] = sample_array[i][0]
+                current_R[cur][0] = sample_array[i][0]
             else:
                 pass
 
@@ -432,21 +381,126 @@ def picture_to_number_R (sample_array, current_hu, pixels, img):
     #     print(int(current_hu[loop][0]))
 
     for loop in range(len(pixels)):
-        draw.text((((pixels[loop][2] + pixels[loop][4]) / 2), pixels[loop][1] - 12), str(int(current_hu[loop][0])), fill="black", font=None, anchor=None)
+        draw.text((((pixels[loop][2] + pixels[loop][4]) / 2), pixels[loop][1] - 12), str(int(current_R[loop][0])), fill="black", font=None, anchor=None)
 
     return
 
-# def zernike_moments (img_array):
-#     label_zernike_numbers = np.zeros((len(img_array), 8)) #number-Z1-.....-Z7
-#
-#     for num in range(len(img_array)):
-#         img_gray = img_array[num].convert('L')  # converts the image to grayscale image
-#         ONE = 1
-#         a = np.asarray(img_gray)  # from PIL to np array
-#         a_bin = threshold(a, 100, ONE, 0)
-#
-#         nrow = a_bin.shape[0]
-#         ncol = a_bin.shape[1]
+def zernike_moments (img_array):
+    label_zernike_numbers = np.zeros((len(img_array), 13)) #number-Z1-.....-Z12
+
+    for num in range(len(img_array)):
+        img_gray = img_array[num].convert('L')  # converts the image to grayscale image
+        ONE = 1
+        a = np.asarray(img_gray)  # from PIL to np array
+        a_bin = threshold(a, 100, ONE, 0)
+
+        nrow = a_bin.shape[0]
+        ncol = a_bin.shape[1]
+
+        N = 21 #Cropped images' size (21x21)
+
+        R = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+        for n in range(7):
+            for m in range(7):
+                for i in range(nrow):
+                    for j in range(ncol):
+                        p = math.sqrt((((math.sqrt(2)) / (N - 1)) * i - (1 / math.sqrt(2))) ** 2 + (
+                            ((math.sqrt(2)) / (N - 1)) * j - (1 / math.sqrt(2))) ** 2)
+                        for s in range(int((n-abs(m))/2)):
+                            R[n][m] = R[n][m] + (pow(-1, s) * pow(p, n - 2*s) * math.factorial(n - s)) / \
+                                math.factorial(int(s)) * math.factorial(int(((n + abs(m))/2) - s)) * math.factorial(int(((n - abs(m))/2) - s))
+
+        V = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+        for n in range(7):
+            for m in range(7):
+                for i in range(nrow):
+                    for j in range(ncol):
+                        p = math.sqrt((((math.sqrt(2)) / (N - 1)) * i - (1 / math.sqrt(2))) ** 2 + (
+                            ((math.sqrt(2)) / (N - 1)) * j - (1 / math.sqrt(2))) ** 2)
+                        try:
+                            theta = math.atan((((math.sqrt(2)) / (N - 1)) * j - (1 / (math.sqrt(2)))) / (
+                                        ((math.sqrt(2)) / (N - 1)) * i - (1 / (math.sqrt(2)))))
+                        except ZeroDivisionError:
+                            theta = 0
+                        V[n][m] = R[n][m] * (math.cos(m*theta) + j*math.sin(m*theta))
+
+        ZR = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+        for n in range(7):
+            for m in range(7):
+                for i in range(nrow):
+                    for j in range(ncol):
+                        p = math.sqrt((((math.sqrt(2)) / (N - 1)) * i - (1 / math.sqrt(2))) ** 2 + (
+                                ((math.sqrt(2)) / (N - 1)) * j - (1 / math.sqrt(2))) ** 2)
+                        try:
+                            theta = math.atan((((math.sqrt(2)) / (N - 1)) * j - (1 /(math.sqrt(2)))) / (((math.sqrt(2)) / (N - 1)) * i - (1 /(math.sqrt(2)))))
+                        except ZeroDivisionError:
+                            theta = 0
+
+                        ZR[n][m] = ZR[n][m] + (((n+1)/math.pi) * a_bin[i][j] * R[n][m] * math.cos(m*theta) * (2/N*math.sqrt(2))**2)
+
+        ZI = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+        for n in range(7):
+            for m in range(7):
+                for i in range(nrow):
+                    for j in range(ncol):
+                        p = math.sqrt((((math.sqrt(2)) / (N - 1)) * i - (1 / math.sqrt(2))) ** 2 + (
+                                ((math.sqrt(2)) / (N - 1)) * j - (1 / math.sqrt(2))) ** 2)
+                        try:
+                            theta = math.atan((((math.sqrt(2)) / (N - 1)) * j - (1 / (math.sqrt(2)))) / (
+                                        ((math.sqrt(2)) / (N - 1)) * i - (1 / (math.sqrt(2)))))
+                        except ZeroDivisionError:
+                            theta = 0
+                        ZI[n][m] = ZI[n][m] + (((-n - 1) / math.pi) * a_bin[i][j] * R[n][m] * math.sin(m * theta) * (
+                                    2 / N * math.sqrt(2)) ** 2)
+
+        Z = [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0],
+              [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0]]
+        for n in range(7):
+            for m in range(7):
+                Z[n][m] = math.sqrt((ZR[n][m])**2 + (ZI[n][m])**2)
+
+        for i in range(len(label_zernike_numbers)):
+            label_zernike_numbers[i][1] = Z[1][1]
+            label_zernike_numbers[i][2] = Z[2][2]
+            label_zernike_numbers[i][3] = Z[3][1]
+            label_zernike_numbers[i][4] = Z[3][3]
+            label_zernike_numbers[i][5] = Z[4][2]
+            label_zernike_numbers[i][6] = Z[4][4]
+            label_zernike_numbers[i][7] = Z[5][1]
+            label_zernike_numbers[i][8] = Z[5][3]
+            label_zernike_numbers[i][9] = Z[5][5]
+            label_zernike_numbers[i][10] = Z[6][2]
+            label_zernike_numbers[i][11] = Z[6][4]
+            label_zernike_numbers[i][12] = Z[6][6]
+
+    return label_zernike_numbers
+
+def picture_to_number_zernike(sample_array, current_zernike, pixels, img) :
+
+    draw = ImageDraw.Draw(img)
+
+    for cur in range(len(current_zernike)):
+        current_number = 9999999999999
+        for i in range(len(sample_array)):
+            a = math.sqrt(
+                (current_zernike[cur][1] - sample_array[i][1]) ** 2 + (current_zernike[cur][2] - sample_array[i][2]) ** 2 +
+                (current_zernike[cur][3] - sample_array[i][3]) ** 2 + (current_zernike[cur][4] - sample_array[i][4]) ** 2 +
+                (current_zernike[cur][5] - sample_array[i][5]) ** 2 + (current_zernike[cur][6] - sample_array[i][6]) ** 2 +
+                (current_zernike[cur][7] - sample_array[i][7]) ** 2 + (current_zernike[cur][8] - sample_array[i][8]) ** 2 +
+                (current_zernike[cur][9] - sample_array[i][9]) ** 2 + (current_zernike[cur][10] - sample_array[i][10]) ** 2 +
+                (current_zernike[cur][11] - sample_array[i][11]) ** 2 + (current_zernike[cur][12] - sample_array[i][12]) ** 2)
+            if current_number >= a:
+                current_number = a
+                current_zernike[cur][0] = sample_array[i][0]
+            else:
+                pass
+
+    for loop in range(len(pixels)):
+        draw.text((((pixels[loop][2] + pixels[loop][4]) / 2), pixels[loop][1] - 12), str(int(current_zernike[loop][0])),
+                  fill="black", font=None, anchor=None)
+
+    return
 
 #######################################################################################################################3
 
@@ -468,7 +522,7 @@ def TrainingEvent():
 
 def HuTrainingEvent(e):
 
-    img = Image.open(top.filename)
+    img = Image.open(top_filename)
     img_gray = img.convert('L')  # converts the image to grayscale image
     ONE = 150
     a = np.asarray(img_gray)  # from PIL to np array
@@ -491,12 +545,16 @@ def HuTrainingEvent(e):
     with open("samples.txt", "ab") as f:
         np.savetxt(f, data)
 
+    ## creating txt for database
+    # np.savetxt("samplesR213214.txt", data)
+    # print(np.load("samples.txt"))
+
     messagebox.showinfo("Hu Moment", "Training completed!!")
 
 
 def RTrainingEvent(e):
 
-    img = Image.open(top.filename)
+    img = Image.open(top_filename)
     img_gray = img.convert('L')  # converts the image to grayscale image
     ONE = 150
     a = np.asarray(img_gray)  # from PIL to np array
@@ -520,10 +578,41 @@ def RTrainingEvent(e):
     with open("samplesR.txt", "ab") as f:
         np.savetxt(f, data)
 
+    ## creating txt for database
+    # np.savetxt("samplesR213214.txt", data)
+    # print(np.load("samples.txt"))
+
     messagebox.showinfo("R Moment", "Training completed!!")
 
 
 def ZernikeTrainingEvent(e):
+    img = Image.open(top_filename)
+    img_gray = img.convert('L')  # converts the image to grayscale image
+    ONE = 150
+    a = np.asarray(img_gray)  # from PIL to np array
+    a_bin = threshold(a, 100, ONE, 0)
+    im_label, colour_label, table = blob_coloring_8_connected(a_bin, ONE)
+
+    cropped_images = []
+    for i in range(len(table)):
+        cropped = img.crop((table[i][2], table[i][1], table[i][4], table[i][3]))
+        cropped = cropped.resize((21, 21))
+        cropped_images.append(cropped)
+
+    label_zernike_nums = zernike_moments(cropped_images)
+
+    for i in range(len(label_zernike_nums)):
+        # label_zernike_nums[i][0] = i % 10     #0to9 filling but this is not an option for now.
+        label_zernike_nums[i][0] = e.get()
+    # print(label_zernike_nums)
+    data = np.asarray(label_zernike_nums)
+    with open("samplesZ.txt", "ab") as f:
+        np.savetxt(f, data)
+
+    ## creating txt for database
+    # np.savetxt("samplesR213214.txt", data)
+    # print(np.load("samples.txt"))
+
     messagebox.showinfo("Zernike Moment", "Training completed")
 
 
@@ -542,7 +631,7 @@ def TestingEvent():
     Zernike_training.pack()
 
 def HuTestingEvent():
-    img = Image.open(top.filename)
+    img = Image.open(top_filename)
     img_gray = img.convert('L')  # converts the image to grayscale image
     ONE = 150
     a = np.asarray(img_gray)  # from PIL to np array
@@ -563,7 +652,7 @@ def HuTestingEvent():
     messagebox.showinfo("Hu Moment", "Testing completed")
 
 def RTestingEvent():
-    img = Image.open(top.filename)
+    img = Image.open(top_filename)
     img_gray = img.convert('L')  # converts the image to grayscale image
     ONE = 150
     a = np.asarray(img_gray)  # from PIL to np array
@@ -584,6 +673,24 @@ def RTestingEvent():
     messagebox.showinfo("R Moment", "Testing completed")
 
 def ZernikeTestingEvent():
+    img = Image.open(top_filename)
+    img_gray = img.convert('L')  # converts the image to grayscale image
+    ONE = 150
+    a = np.asarray(img_gray)  # from PIL to np array
+    a_bin = threshold(a, 100, ONE, 0)
+    im_label, colour_label, table = blob_coloring_8_connected(a_bin, ONE)
+    new_img3 = draw_rectangles(table, img)
+
+    cropped_images = []
+    for i in range(len(table)):
+        cropped = img.crop((table[i][2], table[i][1], table[i][4], table[i][3]))
+        cropped = cropped.resize((21, 21))
+        cropped_images.append(cropped)
+
+    label_zernike_nums = zernike_moments(cropped_images)
+
+    picture_to_number_zernike(samplesZ, label_zernike_nums, table, new_img3)
+    new_img3.show()
     messagebox.showinfo("Zernike Moment", "Testing completed")
 
 
