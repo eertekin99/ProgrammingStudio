@@ -460,19 +460,19 @@ def zernike_moments (img_array):
             for m in range(7):
                 Z[n][m] = math.sqrt((ZR[n][m])**2 + (ZI[n][m])**2)
 
-        for i in range(len(label_zernike_numbers)):
-            label_zernike_numbers[i][1] = Z[1][1]
-            label_zernike_numbers[i][2] = Z[2][2]
-            label_zernike_numbers[i][3] = Z[3][1]
-            label_zernike_numbers[i][4] = Z[3][3]
-            label_zernike_numbers[i][5] = Z[4][2]
-            label_zernike_numbers[i][6] = Z[4][4]
-            label_zernike_numbers[i][7] = Z[5][1]
-            label_zernike_numbers[i][8] = Z[5][3]
-            label_zernike_numbers[i][9] = Z[5][5]
-            label_zernike_numbers[i][10] = Z[6][2]
-            label_zernike_numbers[i][11] = Z[6][4]
-            label_zernike_numbers[i][12] = Z[6][6]
+
+        label_zernike_numbers[num][1] = Z[1][1]
+        label_zernike_numbers[num][2] = Z[2][2]
+        label_zernike_numbers[num][3] = Z[3][1]
+        label_zernike_numbers[num][4] = Z[3][3]
+        label_zernike_numbers[num][5] = Z[4][2]
+        label_zernike_numbers[num][6] = Z[4][4]
+        label_zernike_numbers[num][7] = Z[5][1]
+        label_zernike_numbers[num][8] = Z[5][3]
+        label_zernike_numbers[num][9] = Z[5][5]
+        label_zernike_numbers[num][10] = Z[6][2]
+        label_zernike_numbers[num][11] = Z[6][4]
+        label_zernike_numbers[num][12] = Z[6][6]
 
     return label_zernike_numbers
 
@@ -508,16 +508,26 @@ def picture_to_number_zernike(sample_array, current_zernike, pixels, img) :
 def TrainingEvent():
     training_window = tk.Tk()
 
-    e = Entry(training_window, width=50, borderwidth=2)
+    e = Entry(training_window, width=80, borderwidth=3)
     e.pack()
-    e.insert(0, "0")
+    e.insert(0, "Choose a digit to fill the database (Works with 1 digit Training)")
 
-    hu_training = tk.Button(training_window, text = "Hu Moment Training", padx = 40, pady = 20, borderwidth=2, command=lambda: HuTrainingEvent(e))
+    hu_training = tk.Button(training_window, text = "Hu Moment Training (1 digit)", padx = 40, pady = 20, borderwidth=2, command=lambda: HuTrainingEvent(e))
     hu_training.pack()
-    R_training = tk.Button(training_window, text="R Moment Training", padx = 40, pady = 20, borderwidth=2, command=lambda: RTrainingEvent(e))
+    R_training = tk.Button(training_window, text="R Moment Training (1 digit)", padx = 40, pady = 20, borderwidth=2, command=lambda: RTrainingEvent(e))
     R_training.pack()
-    Zernike_training = tk.Button(training_window, text="Zernike Moment Training", padx = 40, pady = 20, borderwidth=2, command=lambda: ZernikeTrainingEvent(e))
+    Zernike_training = tk.Button(training_window, text="Zernike Moment Training (1 digit)", padx = 40, pady = 20, borderwidth=2, command=lambda: ZernikeTrainingEvent(e))
     Zernike_training.pack()
+
+    hu_training1 = tk.Button(training_window, text="Hu Moment Training (0-9)", padx=40, pady=20, borderwidth=2,
+                            command=lambda: HuTrainingEvent1(e))
+    hu_training1.pack()
+    R_training1 = tk.Button(training_window, text="R Moment Training (0-9)", padx=40, pady=20, borderwidth=2,
+                           command=lambda: RTrainingEvent1(e))
+    R_training1.pack()
+    Zernike_training1 = tk.Button(training_window, text="Zernike Moment Training (0-9)", padx=40, pady=20,
+                                 borderwidth=2, command=lambda: ZernikeTrainingEvent1(e))
+    Zernike_training1.pack()
 
 
 def HuTrainingEvent(e):
@@ -614,6 +624,102 @@ def ZernikeTrainingEvent(e):
     # print(np.load("samples.txt"))
 
     messagebox.showinfo("Zernike Moment", "Training completed")
+
+def HuTrainingEvent1(e):
+
+    img = Image.open(top_filename)
+    img_gray = img.convert('L')  # converts the image to grayscale image
+    ONE = 150
+    a = np.asarray(img_gray)  # from PIL to np array
+    a_bin = threshold(a, 100, ONE, 0)
+    im_label, colour_label, table = blob_coloring_8_connected(a_bin, ONE)
+
+    cropped_images = []
+    for i in range(len(table)):
+        cropped = img.crop((table[i][2], table[i][1], table[i][4], table[i][3]))
+        cropped = cropped.resize((21, 21))
+        cropped_images.append(cropped)
+
+    label_hu_nums = hu_moments(cropped_images)
+
+    for i in range(len(label_hu_nums)):
+        label_hu_nums[i][0] = i % 10     #0to9 filling but this is not an option for now.
+        #label_hu_nums[i][0] = e.get()
+    #print(label_hu_nums)
+    data = np.asarray(label_hu_nums)
+    with open("samples.txt", "ab") as f:
+        np.savetxt(f, data)
+
+    ## creating txt for database
+    # np.savetxt("samplesR213214.txt", data)
+    # print(np.load("samples.txt"))
+
+    messagebox.showinfo("Hu Moment", "Training completed!!")
+
+
+def RTrainingEvent1(e):
+
+    img = Image.open(top_filename)
+    img_gray = img.convert('L')  # converts the image to grayscale image
+    ONE = 150
+    a = np.asarray(img_gray)  # from PIL to np array
+    a_bin = threshold(a, 100, ONE, 0)
+    im_label, colour_label, table = blob_coloring_8_connected(a_bin, ONE)
+    new_img3 = draw_rectangles(table, img)
+
+    cropped_images = []
+    for i in range(len(table)):
+        cropped = img.crop((table[i][2], table[i][1], table[i][4], table[i][3]))
+        cropped = cropped.resize((21, 21))
+        cropped_images.append(cropped)
+
+    label_R_nums = r_moment(cropped_images)
+
+    for i in range(len(label_R_nums)):
+        label_R_nums[i][0] = i % 10     #0to9 filling but this is not an option for now.
+        #label_R_nums[i][0] = e.get()
+    #print(label_R_nums)
+    data = np.asarray(label_R_nums)
+    with open("samplesR.txt", "ab") as f:
+        np.savetxt(f, data)
+
+    ## creating txt for database
+    # np.savetxt("samplesR213214.txt", data)
+    # print(np.load("samples.txt"))
+
+    messagebox.showinfo("R Moment", "Training completed!!")
+
+
+def ZernikeTrainingEvent1(e):
+    img = Image.open(top_filename)
+    img_gray = img.convert('L')  # converts the image to grayscale image
+    ONE = 150
+    a = np.asarray(img_gray)  # from PIL to np array
+    a_bin = threshold(a, 100, ONE, 0)
+    im_label, colour_label, table = blob_coloring_8_connected(a_bin, ONE)
+
+    cropped_images = []
+    for i in range(len(table)):
+        cropped = img.crop((table[i][2], table[i][1], table[i][4], table[i][3]))
+        cropped = cropped.resize((21, 21))
+        cropped_images.append(cropped)
+
+    label_zernike_nums = zernike_moments(cropped_images)
+
+    for i in range(len(label_zernike_nums)):
+        label_zernike_nums[i][0] = i % 10     #0to9 filling but this is not an option for now.
+        #label_zernike_nums[i][0] = e.get()
+    # print(label_zernike_nums)
+    data = np.asarray(label_zernike_nums)
+    with open("samplesZ.txt", "ab") as f:
+        np.savetxt(f, data)
+
+    ## creating txt for database
+    # np.savetxt("samplesR213214.txt", data)
+    # print(np.load("samples.txt"))
+
+    messagebox.showinfo("Zernike Moment", "Training completed")
+
 
 
 
