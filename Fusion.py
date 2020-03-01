@@ -314,9 +314,6 @@ def hu_moments (img_array):
 
 #Comparison of calculated values and print which number was guessed
 def picture_to_number_hu(sample_array, current_hu, pixels, img):
-    #print("cur_hu =", len(current_hu))
-    #print("sample_hu =", len(sample_array))
-    #print(sample_array)
 
     draw = ImageDraw.Draw(img)
 
@@ -333,12 +330,12 @@ def picture_to_number_hu(sample_array, current_hu, pixels, img):
             else:
                 pass
 
-    # for loop in range(len(current_hu)):
-    #     print(int(current_hu[loop][0]))
         if current_hu[cur][0] > 9:
-                draw.text((((pixels[cur][2] + pixels[cur][4]) / 2), pixels[cur][1] - 12), str(chr(int(current_hu[cur][0]))), fill="black", font=None, anchor=None)
+                draw.text((((pixels[cur][2] + pixels[cur][4]) / 2), pixels[cur][1] - 12),
+                          str(chr(int(current_hu[cur][0]))), fill="black", font=None, anchor=None)
         else:
-                draw.text((((pixels[cur][2] + pixels[cur][4]) / 2), pixels[cur][1] - 12), str(int(current_hu[cur][0])), fill="black", font=None, anchor=None)
+                draw.text((((pixels[cur][2] + pixels[cur][4]) / 2), pixels[cur][1] - 12),
+                          str(int(current_hu[cur][0])), fill="black", font=None, anchor=None)
     return
 
 #Calculations of R moments
@@ -382,9 +379,6 @@ def picture_to_number_R (sample_array, current_R, pixels, img):
                 current_R[cur][0] = sample_array[i][0]
             else:
                 pass
-
-    # for loop in range(len(current_hu)):
-    #     print(int(current_hu[loop][0]))
 
     for loop in range(len(pixels)):
         draw.text((((pixels[loop][2] + pixels[loop][4]) / 2), pixels[loop][1] - 12), str(int(current_R[loop][0])),
