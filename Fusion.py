@@ -9,9 +9,9 @@ from tkinter import filedialog
 from tkinter import Entry
 
 
-samples = np.loadtxt("samples.txt")
-samplesR = np.loadtxt("samplesR.txt")
-samplesZ = np.loadtxt("samplesZ.txt")
+samples = np.loadtxt("samples.txt")  #loading database of hu moments
+samplesR = np.loadtxt("samplesR.txt") #loading database of R moments
+samplesZ = np.loadtxt("samplesZ.txt") #loading database of Zernike moments
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
     top = tk.Tk() # creates window
     global top_filename
     top_filename = filedialog.askopenfilename(initialdir="/", title="Select file",
-                                              filetypes=(("all files", "*.*"), ("jpeg files", "*.jpg")))
+                                              filetypes=(("all files", "*.*"), ("jpeg files", "*.jpg")))  #getting file from user
     img1 = ImageTk.PhotoImage(Image.open(top_filename))  # image
     panel = tk.Label(top, image=img1)
     panel.pack(side="bottom", fill="both", expand="yes")
@@ -31,8 +31,10 @@ def main():
     B2.pack()
     top.mainloop()
 
+#To change the file inside of the program
 def FileEvent(img1, top):
-    top.destroy()
+
+    top.destroy() #destroy first window
     top = tk.Tk()
     global top_filename
     top_filename = filedialog.askopenfilename(initialdir="/", title="Select file",
@@ -238,12 +240,14 @@ def update_array(a, label1, label2):
 
     return
 
+#Drawing rectangles based on given array that can be hu, R or Zernike's array
 def draw_rectangles (array, image):
     draw = ImageDraw.Draw(image)
     for a in range(len(array)):
         draw.rectangle([int(array[a][2])-2, int(array[a][1])-2, int(array[a][4])+2, int(array[a][3])+2], width=1, outline="#ff0000")
     return image
 
+#Calculations of hu moments
 def hu_moments (img_array):
     label_hu_numbers = np.zeros((len(img_array), 8)) #number-Hu1-.....-Hu7
 
@@ -308,6 +312,7 @@ def hu_moments (img_array):
 
     return label_hu_numbers
 
+#Comparison of calculated values and print which number was guessed
 def picture_to_number_hu(sample_array, current_hu, pixels, img):
     #print("cur_hu =", len(current_hu))
     #print("sample_hu =", len(sample_array))
@@ -330,13 +335,13 @@ def picture_to_number_hu(sample_array, current_hu, pixels, img):
 
     # for loop in range(len(current_hu)):
     #     print(int(current_hu[loop][0]))
-
-    for loop in range(len(pixels)):
-        draw.text((((pixels[loop][2] + pixels[loop][4]) / 2), pixels[loop][1] - 12), str(int(current_hu[loop][0])), fill="black", font=None, anchor=None)
-
+        if current_hu[cur][0] > 9:
+                draw.text((((pixels[cur][2] + pixels[cur][4]) / 2), pixels[cur][1] - 12), str(chr(int(current_hu[cur][0]))), fill="black", font=None, anchor=None)
+        else:
+                draw.text((((pixels[cur][2] + pixels[cur][4]) / 2), pixels[cur][1] - 12), str(int(current_hu[cur][0])), fill="black", font=None, anchor=None)
     return
 
-
+#Calculations of R moments
 def r_moment(image_array):
 
     label_R_numbers = np.zeros((len(image_array), 11))  # number-R1-.....-R10
@@ -359,6 +364,7 @@ def r_moment(image_array):
 
     return label_R_numbers
 
+#Comparison of calculated values and print which number was guessed
 def picture_to_number_R (sample_array, current_R, pixels, img):
 
     draw = ImageDraw.Draw(img)
@@ -381,10 +387,11 @@ def picture_to_number_R (sample_array, current_R, pixels, img):
     #     print(int(current_hu[loop][0]))
 
     for loop in range(len(pixels)):
-        draw.text((((pixels[loop][2] + pixels[loop][4]) / 2), pixels[loop][1] - 12), str(int(current_R[loop][0])), fill="black", font=None, anchor=None)
-
+        draw.text((((pixels[loop][2] + pixels[loop][4]) / 2), pixels[loop][1] - 12), str(int(current_R[loop][0])),
+                      fill="black", font=None, anchor=None)
     return
 
+#Calculations of zernike moments
 def zernike_moments (img_array):
     label_zernike_numbers = np.zeros((len(img_array), 13)) #number-Z1-.....-Z12
 
@@ -476,6 +483,7 @@ def zernike_moments (img_array):
 
     return label_zernike_numbers
 
+#Comparison of calculated values and print which number was guessed
 def picture_to_number_zernike(sample_array, current_zernike, pixels, img) :
 
     draw = ImageDraw.Draw(img)
@@ -496,8 +504,11 @@ def picture_to_number_zernike(sample_array, current_zernike, pixels, img) :
             else:
                 pass
 
-    for loop in range(len(pixels)):
-        draw.text((((pixels[loop][2] + pixels[loop][4]) / 2), pixels[loop][1] - 12), str(int(current_zernike[loop][0])),
+        if current_zernike[cur][0] > 9:
+            draw.text((((pixels[cur][2] + pixels[cur][4]) / 2), pixels[cur][1] - 12), str(chr(int(current_zernike[cur][0]))),
+                  fill="black", font=None, anchor=None)
+        else:
+            draw.text((((pixels[cur][2] + pixels[cur][4]) / 2), pixels[cur][1] - 12), str(int(current_zernike[cur][0])),
                   fill="black", font=None, anchor=None)
 
     return
@@ -519,6 +530,8 @@ def TrainingEvent():
     Zernike_training = tk.Button(training_window, text="Zernike Moment Training (1 digit)", padx = 40, pady = 20, borderwidth=2, command=lambda: ZernikeTrainingEvent(e))
     Zernike_training.pack()
 
+
+
     hu_training1 = tk.Button(training_window, text="Hu Moment Training (0-9)", padx=40, pady=20, borderwidth=2,
                             command=lambda: HuTrainingEvent1(e))
     hu_training1.pack()
@@ -528,6 +541,18 @@ def TrainingEvent():
     Zernike_training1 = tk.Button(training_window, text="Zernike Moment Training (0-9)", padx=40, pady=20,
                                  borderwidth=2, command=lambda: ZernikeTrainingEvent1(e))
     Zernike_training1.pack()
+
+
+
+    hu_training2 = tk.Button(training_window, text="Hu Moment Training (A-Z)", padx=40, pady=20, borderwidth=2,
+                             command=lambda: HuTrainingEvent2(e))
+    hu_training2.pack()
+
+    Zernike_training2 = tk.Button(training_window, text="Zernike Moment Training (A-Z)", padx=40, pady=20,
+                                  borderwidth=2, command=lambda: ZernikeTrainingEvent2(e))
+    Zernike_training2.pack()
+
+
 
 
 def HuTrainingEvent(e):
@@ -643,9 +668,7 @@ def HuTrainingEvent1(e):
     label_hu_nums = hu_moments(cropped_images)
 
     for i in range(len(label_hu_nums)):
-        label_hu_nums[i][0] = i % 10     #0to9 filling but this is not an option for now.
-        #label_hu_nums[i][0] = e.get()
-    #print(label_hu_nums)
+        label_hu_nums[i][0] = i % 10  # 0to9 filling but this is not an option for now.
     data = np.asarray(label_hu_nums)
     with open("samples.txt", "ab") as f:
         np.savetxt(f, data)
@@ -720,7 +743,68 @@ def ZernikeTrainingEvent1(e):
 
     messagebox.showinfo("Zernike Moment", "Training completed")
 
+def HuTrainingEvent2(e):
 
+    img = Image.open(top_filename)
+    img_gray = img.convert('L')  # converts the image to grayscale image
+    ONE = 150
+    a = np.asarray(img_gray)  # from PIL to np array
+    a_bin = threshold(a, 100, ONE, 0)
+    im_label, colour_label, table = blob_coloring_8_connected(a_bin, ONE)
+
+    cropped_images = []
+    for i in range(len(table)):
+        cropped = img.crop((table[i][2], table[i][1], table[i][4], table[i][3]))
+        cropped = cropped.resize((21, 21))
+        cropped_images.append(cropped)
+
+    label_hu_nums = hu_moments(cropped_images)
+
+    caps = 65
+    for i in range(len(label_hu_nums)):
+        label_hu_nums[i][0] = caps  # 0to9 filling but this is not an option for now.
+        caps = caps + 1
+    # print(label_hu_nums)
+    data = np.asarray(label_hu_nums)
+    with open("samples.txt", "ab") as f:
+        np.savetxt(f, data)
+
+    ## creating txt for database
+    # np.savetxt("samplesR213214.txt", data)
+    # print(np.load("samples.txt"))
+
+    messagebox.showinfo("Hu Moment (A-Z)", "Training completed!!")
+
+
+def ZernikeTrainingEvent2(e):
+    img = Image.open(top_filename)
+    img_gray = img.convert('L')  # converts the image to grayscale image
+    ONE = 150
+    a = np.asarray(img_gray)  # from PIL to np array
+    a_bin = threshold(a, 100, ONE, 0)
+    im_label, colour_label, table = blob_coloring_8_connected(a_bin, ONE)
+
+    cropped_images = []
+    for i in range(len(table)):
+        cropped = img.crop((table[i][2], table[i][1], table[i][4], table[i][3]))
+        cropped = cropped.resize((21, 21))
+        cropped_images.append(cropped)
+
+    label_zernike_nums = zernike_moments(cropped_images)
+
+    caps = 65
+    for i in range(len(label_zernike_nums)):
+        label_zernike_nums[i][0] = caps  # 0to9 filling but this is not an option for now.
+        caps = caps + 1
+    data = np.asarray(label_zernike_nums)
+    with open("samplesZ.txt", "ab") as f:
+        np.savetxt(f, data)
+
+    ## creating txt for database
+    # np.savetxt("samplesR213214.txt", data)
+    # print(np.load("samples.txt"))
+
+    messagebox.showinfo("Zernike Moment (A-Z)", "Training completed")
 
 
 ######################################################################################################################
@@ -731,12 +815,15 @@ def TestingEvent():
     testing_window = tk.Tk()
     hu_training = tk.Button(testing_window, text="Hu Moment Testing", padx = 40, pady = 20, borderwidth=2, command=HuTestingEvent)
     hu_training.pack()
-    R_training = tk.Button(testing_window, text="R Moment Testing", padx = 40, pady = 20, borderwidth=2, command=RTestingEvent)
+    R_training = tk.Button(testing_window, text="R Moment Testing (Doesn't work for A-Z)", padx = 40, pady = 20, borderwidth=2, command=RTestingEvent)
     R_training.pack()
     Zernike_training = tk.Button(testing_window, text="Zernike Moment Testing", padx = 40, pady = 20, borderwidth=2, command=ZernikeTestingEvent)
     Zernike_training.pack()
 
 def HuTestingEvent():
+
+    samples = np.loadtxt("samples.txt")  # loading database of hu moments
+
     img = Image.open(top_filename)
     img_gray = img.convert('L')  # converts the image to grayscale image
     ONE = 150
@@ -758,6 +845,9 @@ def HuTestingEvent():
     messagebox.showinfo("Hu Moment", "Testing completed")
 
 def RTestingEvent():
+
+    samplesR = np.loadtxt("samplesR.txt")  # loading database of R moments
+
     img = Image.open(top_filename)
     img_gray = img.convert('L')  # converts the image to grayscale image
     ONE = 150
@@ -779,6 +869,9 @@ def RTestingEvent():
     messagebox.showinfo("R Moment", "Testing completed")
 
 def ZernikeTestingEvent():
+
+    samplesZ = np.loadtxt("samplesZ.txt")  # loading database of Zernike moments
+
     img = Image.open(top_filename)
     img_gray = img.convert('L')  # converts the image to grayscale image
     ONE = 150
